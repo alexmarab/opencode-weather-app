@@ -4,6 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "start": "bun run index.ts",
+    "build": "bun build --compile index.ts --outfile weather",
+    "dev": "bun run --watch index.ts",
     "typecheck": "bun check"
   },
   "devDependencies": {

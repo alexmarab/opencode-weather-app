@@ -2,14 +2,15 @@
 
 ## Project
 
-Weather CLI app built with Bun + TypeScript, in Spanish (menu, prompts, output). Entry point: `index.ts`. Goal of the exercise is to ship a binary at the end (`bun build --compile`). No tests, lint, or CI exist yet.
+Weather CLI app built with Bun + TypeScript, in Spanish (menu, prompts, output). Entry point: `index.ts`. Fully implemented: state persisted in `data.json` (gitignored). Optionally shipped as a binary via `bun build --compile`. No tests, lint, or CI exist yet.
 
 ## Commands
 
 ```bash
 bun install        # do NOT use npm/pnpm/yarn
-bun index.ts       # run the app
+bun index.ts       # run the app (interactive; pipe input to script it)
 bun run typecheck  # runs `bun check`; verified working
+bun build --compile index.ts --outfile weather  # ship the executable binary
 ```
 
 - Full Bun-specific rules: see `bun-instructions.md` at the repo root — follow it for file edits and API choices.
@@ -42,5 +43,6 @@ https://api.open-meteo.com/v1/forecast?latitude=<lat>&longitude=<lon>&current=te
 ## UX conventions (README.md is the spec)
 
 - Menu format and option numbers are shown in README `### Ejemplo del menú` — match it.
-- Sustained state (cities, default city, °C/°F) is not implemented yet; pick simple local persistence in Bun unless the user says otherwise.
+- State (cities, default city, °C/°F unit) lives in `data.json` at the repo root; it is loaded/saved via `src/storage.ts`.
+- Bun readline quirk (hard-earned): `node:readline/promises` answers only the FIRST `rl.question()` when stdin is a pipe; later ones hang forever. The app reads lines manually in `src/prompt.ts` over `Bun.stdin.stream()` — do not reintroduce readline.
 - Puedes usar `@bun-instructions.md` para obtener instrucciones de Bun.

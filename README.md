@@ -1,8 +1,8 @@
-## Weather CLI APP
+# Weather CLI APP
 
 El objetivo de esta aplicación es que creemos una aplicación de consola que pida que ingresemos la ciudad, Al final, generaremos un binario ejecutable.
 
-### Opciones:
+## Opciones
 
 - Ingresar el nombre de una ciudad.
 - Guardar la ciudad por defecto.
@@ -13,7 +13,7 @@ El objetivo de esta aplicación es que creemos una aplicación de consola que pi
 - Bun.js
 - OpenMeteo
 
-## Ejemplo de petición http:
+## Ejemplo de petición http
 
 1. Paso 1: Geocoding API.
 2. Paso 2: OpenMeteo API.
@@ -30,6 +30,7 @@ bun init
 ```
 
 ### Ejemplo del menú
+
 Esta es la apariencia que deseamos crear
 
 ```bash
