@@ -31,7 +31,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 *.tsbuildinfo
 
 # app del clima
-data.json
+cities.json
+settings.json
 /weather
 
 # IntelliJ based IDEs

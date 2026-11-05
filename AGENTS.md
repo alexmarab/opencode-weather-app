@@ -2,7 +2,7 @@
 
 ## Project
 
-Weather CLI app built with Bun + TypeScript, in Spanish (menu, prompts, output). Entry point: `index.ts`. Fully implemented: state persisted in `data.json` (gitignored). Optionally shipped as a binary via `bun build --compile`. No tests, lint, or CI exist yet.
+Weather CLI app built with Bun + TypeScript, in Spanish (menu, prompts, output). Entry point: `src/index.ts` (root `index.ts` is a 1-line shim re-importing it, kept so `bun index.ts` / `bun build` still work). Fully implemented: state is split across `cities.json` + `settings.json` at the repo root (both gitignored); the old single-file `data.json` is migrated automatically on first run. Code is layered by folder under `src/`: `actions/` (one file per menu action), `presentation/` (menu, input, output messages), `storage/` (data files), `types/`, `api/` (OpenMeteo), `utils/` (colors, formatting, constants). Optionally shipped as a binary via `bun build --compile`. No tests, lint, or CI exist yet.
 
 ## Commands
 
@@ -43,6 +43,6 @@ https://api.open-meteo.com/v1/forecast?latitude=<lat>&longitude=<lon>&current=te
 ## UX conventions (README.md is the spec)
 
 - Menu format and option numbers are shown in README `### Ejemplo del menú` — match it.
-- State (cities, default city, °C/°F unit) lives in `data.json` at the repo root; it is loaded/saved via `src/storage.ts`.
-- Bun readline quirk (hard-earned): `node:readline/promises` answers only the FIRST `rl.question()` when stdin is a pipe; later ones hang forever. The app reads lines manually in `src/prompt.ts` over `Bun.stdin.stream()` — do not reintroduce readline.
+- State is split in two files at the repo root: `cities.json` (city list) and `settings.json` (default city + °C/°F unit). Each is loaded/saved via `src/storage/citiesStorage.ts` and `src/storage/settingsStorage.ts`. One-time migration of legacy `data.json` happens in `src/storage/migrate.ts`.
+- Bun readline quirk (hard-earned): `node:readline/promises` answers only the FIRST `rl.question()` when stdin is a pipe; later ones hang forever. The app reads lines manually in `src/presentation/input.ts` over `Bun.stdin.stream()` — do not reintroduce readline.
 - Puedes usar `@bun-instructions.md` para obtener instrucciones de Bun.

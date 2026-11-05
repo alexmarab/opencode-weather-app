@@ -1,27 +1,8 @@
-import type { City, State, Unit } from "./types.ts";
-import type { DailyForecast, WeatherReading } from "./api.ts";
-import { cyan, gray, yellow } from "./colors.ts";
-import { describeWeather } from "./weather-codes.ts";
-
-// Formato de {@link https://github.com/README.md | README} -> "### Ejemplo del menú".
-const BORDER = cyan("═".repeat(40));
-
-export function renderMenu(state: State): string {
-  return [
-    BORDER,
-    cyan("         WEATHER CLI"),
-    BORDER,
-    "  1. Clima de ciudad default",
-    `  2. Clima de todas las ciudades (${state.cities.length})`,
-    "  3. Buscar y agregar ciudad",
-    "  4. Eliminar ciudad",
-    "  5. Establecer ciudad default",
-    "  6. Pronóstico 7 días",
-    `  8. Ajustes (°${state.unit})`,
-    "  9. Salir",
-    BORDER,
-  ].join("\n");
-}
+import type { City } from "../types/City.ts";
+import type { DailyForecast, WeatherReading } from "../types/Weather.ts";
+import type { Unit } from "../types/Settings.ts";
+import { gray, yellow } from "./colors.ts";
+import { describeWeather } from "./constants.ts";
 
 export function numberedList(items: string[]): string {
   return items.map((item, index) => `  ${index + 1}. ${item}`).join("\n");

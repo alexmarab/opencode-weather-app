@@ -1,6 +1,5 @@
-export class InputClosedError extends Error {
-  override name = "InputClosedError";
-}
+import type { City } from "../types/City.ts";
+import { cyan } from "../utils/colors.ts";
 
 // `node:readline/promises` responde solo la primera pregunta cuando stdin es
 // un pipe (quirk de Bun: las siguientes `rl.question` cuelgan). Leemos las
@@ -37,7 +36,9 @@ async function pumpStdin(): Promise<void> {
   deliverAvailableLines();
 }
 
-import { cyan } from "./colors.ts";
+export class InputClosedError extends Error {
+  override name = "InputClosedError";
+}
 
 export function ask(prompt: string): Promise<string> {
   if (!pumpStarted) {
@@ -50,4 +51,12 @@ export function ask(prompt: string): Promise<string> {
     waiters.push({ resolve, reject });
     deliverAvailableLines();
   });
+}
+
+/** Convierte la respuesta del usuario en un índice de la lista, o `null` si es inválida. */
+export async function pickCityIndex(cities: City[], prompt: string): Promise<number | null> {
+  const raw = (await ask(prompt)).trim();
+  const index = Number.parseInt(raw, 10);
+  if (Number.isNaN(index) || index < 1 || index > cities.length) return null;
+  return index - 1;
 }

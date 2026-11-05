@@ -1,72 +1,8 @@
-import type { City } from "./types.ts";
+import type { City } from "../types/City.ts";
+import type { DailyForecast, DailyForecastResponse, ForecastResponse, WeatherReading } from "../types/Weather.ts";
 
-// Paso 1: geocoding. Paso 2: forecast con las coordenadas obtenidas.
-const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
+// Paso 2 del flujo: forecast con las coordenadas del geocoding.
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
-
-interface GeocodingResponse {
-  results?: Array<{
-    name: string;
-    latitude: number;
-    longitude: number;
-  }>;
-}
-
-interface ForecastResponse {
-  current?: {
-    temperature_2m: number;
-    weather_code: number;
-  };
-}
-
-interface DailyForecastResponse {
-  daily?: {
-    time: string[];
-    weather_code: number[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-  };
-}
-
-export interface WeatherReading {
-  temperatureC: number;
-  code: number;
-}
-
-export interface DailyForecast {
-  /** Fecha ISO del día, p. ej. "2026-11-05". */
-  date: string;
-  minC: number;
-  maxC: number;
-  code: number;
-}
-
-/** Devuelve la primera coincidencia del geocoding, o `null` si no se encontró / falló la red. */
-export async function geocodeCity(name: string): Promise<City | null> {
-  const params = new URLSearchParams({
-    name,
-    count: "1",
-    language: "es",
-    format: "json",
-  });
-
-  try {
-    const response = await fetch(`${GEOCODING_URL}?${params}`);
-    if (!response.ok) return null;
-
-    const data = (await response.json()) as GeocodingResponse;
-    const match = data.results?.[0];
-    if (!match) return null;
-
-    return {
-      name: match.name,
-      latitude: match.latitude,
-      longitude: match.longitude,
-    };
-  } catch {
-    return null;
-  }
-}
 
 /** Devuelve la temperatura actual (°C) y el código del estado del tiempo. */
 export async function getCurrentWeather(city: City): Promise<WeatherReading | null> {

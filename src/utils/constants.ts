@@ -1,3 +1,10 @@
+// Archivos de datos, todos en la raíz del repo.
+export const CITIES_FILE = "cities.json";
+export const SETTINGS_FILE = "settings.json";
+// data.json es el archivo del estado viejo (pre-refactor); `migrate.ts` lo
+// particiona a los dos de arriba y lo elimina.
+export const LEGACY_DATA_FILE = "data.json";
+
 // Códigos WMO que devuelve OpenMeteo en `current.weather_code`.
 const WEATHER_DESCRIPTIONS: Record<number, string> = {
   0: "Despejado",
@@ -14,7 +21,7 @@ const WEATHER_DESCRIPTIONS: Record<number, string> = {
   61: "Lluvia ligera",
   63: "Lluvia moderada",
   65: "Lluvia fuerte",
-  66: "Lluvia helada ligera",
+  66: "Llovizna helada ligera",
   67: "Lluvia helada fuerte",
   71: "Nevada ligera",
   73: "Nevada moderada",
