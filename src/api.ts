@@ -19,8 +19,25 @@ interface ForecastResponse {
   };
 }
 
+interface DailyForecastResponse {
+  daily?: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+  };
+}
+
 export interface WeatherReading {
   temperatureC: number;
+  code: number;
+}
+
+export interface DailyForecast {
+  /** Fecha ISO del día, p. ej. "2026-11-05". */
+  date: string;
+  minC: number;
+  maxC: number;
   code: number;
 }
 
@@ -71,6 +88,40 @@ export async function getCurrentWeather(city: City): Promise<WeatherReading | nu
       temperatureC: current.temperature_2m,
       code: current.weather_code,
     };
+  } catch {
+    return null;
+  }
+}
+
+/** Devuelve el pronóstico de 7 días o `null` si falló la red / vinieron datos incompletos. */
+export async function get7DayForecast(city: City): Promise<DailyForecast[] | null> {
+  const params = new URLSearchParams({
+    latitude: `${city.latitude}`,
+    longitude: `${city.longitude}`,
+    daily: "weather_code,temperature_2m_max,temperature_2m_min",
+    forecast_days: "7",
+    timezone: "auto",
+  });
+
+  try {
+    const response = await fetch(`${FORECAST_URL}?${params}`);
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as DailyForecastResponse;
+    const daily = data.daily;
+    if (!daily) return null;
+
+    const forecasts: DailyForecast[] = [];
+    for (const [index, date] of daily.time.entries()) {
+      const code = daily.weather_code[index];
+      const maxC = daily.temperature_2m_max[index];
+      const minC = daily.temperature_2m_min[index];
+      if (date === undefined || code === undefined || maxC === undefined || minC === undefined) {
+        return null;
+      }
+      forecasts.push({ date, minC, maxC, code });
+    }
+    return forecasts.length > 0 ? forecasts : null;
   } catch {
     return null;
   }

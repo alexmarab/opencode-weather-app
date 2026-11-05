@@ -1,9 +1,9 @@
-import { geocodeCity, getCurrentWeather } from "./src/api.ts";
+import { geocodeCity, getCurrentWeather, get7DayForecast } from "./src/api.ts";
 import { gray, green, red } from "./src/colors.ts";
 import { InputClosedError, ask } from "./src/prompt.ts";
 import { loadState, saveState } from "./src/storage.ts";
 import type { City, State } from "./src/types.ts";
-import { formatCityName, formatCityWeather, numberedList, renderMenu } from "./src/ui.ts";
+import { formatCityName, formatCityWeather, formatDailyForecast, numberedList, renderMenu } from "./src/ui.ts";
 
 async function pickCityIndex(cities: City[], prompt: string): Promise<number | null> {
   const raw = (await ask(prompt)).trim();
@@ -43,6 +43,34 @@ async function showAllCitiesWeather(state: State): Promise<void> {
     console.log(gray(`  Consultando ${city.name}...`));
     await showCityWeather(city, state);
   }
+}
+
+async function handle7DayForecast(state: State): Promise<void> {
+  if (state.cities.length === 0) {
+    showNoCitiesMessage();
+    return;
+  }
+
+  console.log(numberedList(state.cities.map(formatCityName)));
+  const index = await pickCityIndex(state.cities, "  Número de la ciudad para el pronóstico: ");
+  if (index === null) {
+    console.log(red("  Opción no válida."));
+    return;
+  }
+
+  const selected = state.cities[index];
+  if (!selected) {
+    console.log(red("  Opción no válida."));
+    return;
+  }
+
+  console.log(gray(`  Consultando pronóstico de ${selected.name}...`));
+  const forecasts = await get7DayForecast(selected);
+  if (!forecasts) {
+    console.log(red("  No se pudo obtener el pronóstico. Revisa tu conexión."));
+    return;
+  }
+  console.log(formatDailyForecast(selected.name, forecasts, state.unit));
 }
 
 async function handleAddCity(state: State): Promise<void> {
@@ -142,6 +170,9 @@ async function main(): Promise<void> {
         break;
       case "5":
         await handleSetDefaultCity(state);
+        break;
+      case "6":
+        await handle7DayForecast(state);
         break;
       case "8":
         await handleToggleUnit(state);
