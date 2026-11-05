@@ -1,4 +1,5 @@
 import { geocodeCity, getCurrentWeather } from "./src/api.ts";
+import { gray, green, red } from "./src/colors.ts";
 import { InputClosedError, ask } from "./src/prompt.ts";
 import { loadState, saveState } from "./src/storage.ts";
 import type { City, State } from "./src/types.ts";
@@ -11,10 +12,14 @@ async function pickCityIndex(cities: City[], prompt: string): Promise<number | n
   return index - 1;
 }
 
+function showNoCitiesMessage(): void {
+  console.log(red("  No hay ciudades registradas. Usa la opción 3 para buscar y agregar una."));
+}
+
 async function showCityWeather(city: City, state: State): Promise<void> {
   const reading = await getCurrentWeather(city);
   if (!reading) {
-    console.log("  No se pudo obtener el clima. Revisa tu conexión.");
+    console.log(red("  No se pudo obtener el clima. Revisa tu conexión."));
     return;
   }
   console.log(formatCityWeather(city.name, reading, state.unit));
@@ -22,20 +27,20 @@ async function showCityWeather(city: City, state: State): Promise<void> {
 
 async function showDefaultCityWeather(state: State): Promise<void> {
   if (!state.defaultCity) {
-    console.log("  No hay ciudad default. Agrega una (opción 3) y establécela como default (opción 5).");
+    console.log(red("  No hay ciudad default. Agrega una (opción 3) y establécela como default (opción 5)."));
     return;
   }
-  console.log(`  Consultando clima de ${state.defaultCity.name}...`);
+  console.log(gray(`  Consultando clima de ${state.defaultCity.name}...`));
   await showCityWeather(state.defaultCity, state);
 }
 
 async function showAllCitiesWeather(state: State): Promise<void> {
   if (state.cities.length === 0) {
-    console.log("  No hay ciudades registradas. Usa la opción 3 para buscar y agregar una.");
+    showNoCitiesMessage();
     return;
   }
   for (const city of state.cities) {
-    console.log(`  Consultando ${city.name}...`);
+    console.log(gray(`  Consultando ${city.name}...`));
     await showCityWeather(city, state);
   }
 }
@@ -43,76 +48,76 @@ async function showAllCitiesWeather(state: State): Promise<void> {
 async function handleAddCity(state: State): Promise<void> {
   const name = (await ask("  Nombre de la ciudad: ")).trim();
   if (!name) {
-    console.log("  El nombre no puede estar vacío.");
+    console.log(red("  El nombre no puede estar vacío."));
     return;
   }
   if (state.cities.some((city) => city.name.toLowerCase() === name.toLowerCase())) {
-    console.log(`  "${name}" ya está registrada.`);
+    console.log(red(`  "${name}" ya está registrada.`));
     return;
   }
 
-  console.log("  Buscando ciudad...");
+  console.log(gray("  Buscando ciudad..."));
   const city = await geocodeCity(name);
   if (!city) {
-    console.log(`  No se encontró la ciudad "${name}". Intenta con otro nombre.`);
+    console.log(red(`  No se encontró la ciudad "${name}". Intenta con otro nombre.`));
     return;
   }
 
   state.cities.push(city);
   await saveState(state);
-  console.log(`  ${city.name} agregada.`);
+  console.log(green(`  ${city.name} agregada.`));
 }
 
 async function handleRemoveCity(state: State): Promise<void> {
   if (state.cities.length === 0) {
-    console.log("  No hay ciudades registradas.");
+    console.log(red("  No hay ciudades registradas."));
     return;
   }
 
   console.log(numberedList(state.cities.map(formatCityName)));
   const index = await pickCityIndex(state.cities, "  Número de la ciudad a eliminar: ");
   if (index === null) {
-    console.log("  Opción no válida.");
+    console.log(red("  Opción no válida."));
     return;
   }
 
   const [removed] = state.cities.splice(index, 1);
   if (removed && state.defaultCity?.name === removed.name && state.defaultCity.latitude === removed.latitude) {
     state.defaultCity = null;
-    console.log("  La ciudad elimina era la default; ya no hay ciudad default.");
+    console.log(red("  La ciudad eliminada era la default; ya no hay ciudad default."));
   }
   await saveState(state);
-  console.log(`  ${removed?.name ?? "La ciudad"} eliminada.`);
+  console.log(green(`  ${removed?.name ?? "La ciudad"} eliminada.`));
 }
 
 async function handleSetDefaultCity(state: State): Promise<void> {
   if (state.cities.length === 0) {
-    console.log("  No hay ciudades registradas. Usa la opción 3 para buscar y agregar una.");
+    showNoCitiesMessage();
     return;
   }
 
   console.log(numberedList(state.cities.map(formatCityName)));
   const index = await pickCityIndex(state.cities, "  Número de la ciudad default: ");
   if (index === null) {
-    console.log("  Opción no válida.");
+    console.log(red("  Opción no válida."));
     return;
   }
 
   const selected = state.cities[index];
   if (!selected) {
-    console.log("  Opción no válida.");
+    console.log(red("  Opción no válida."));
     return;
   }
 
   state.defaultCity = selected;
   await saveState(state);
-  console.log(`  Ciudad default: ${selected.name}.`);
+  console.log(green(`  Ciudad default: ${selected.name}.`));
 }
 
 async function handleToggleUnit(state: State): Promise<void> {
   state.unit = state.unit === "C" ? "F" : "C";
   await saveState(state);
-  console.log(`  Unidad cambiada a °${state.unit}.`);
+  console.log(green(`  Unidad cambiada a °${state.unit}.`));
 }
 
 async function main(): Promise<void> {
@@ -142,10 +147,10 @@ async function main(): Promise<void> {
         await handleToggleUnit(state);
         break;
       case "9":
-        console.log("  ¡Hasta luego!");
+        console.log(green("  ¡Hasta luego!"));
         return;
       default:
-        console.log("  Opción no válida. Elige un número del menú.");
+        console.log(red("  Opción no válida. Elige un número del menú."));
     }
   }
 }
@@ -155,7 +160,7 @@ try {
 } catch (error) {
   if (error instanceof InputClosedError) {
     // Ctrl+D / fin de la entrada: salimos limpio.
-    console.log("  ¡Hasta luego!");
+    console.log(green("  ¡Hasta luego!"));
   } else {
     console.error("Error inesperado:", error);
     process.exit(1);

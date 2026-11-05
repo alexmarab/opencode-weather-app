@@ -37,13 +37,15 @@ async function pumpStdin(): Promise<void> {
   deliverAvailableLines();
 }
 
+import { cyan } from "./colors.ts";
+
 export function ask(prompt: string): Promise<string> {
   if (!pumpStarted) {
     pumpStarted = true;
     void pumpStdin();
   }
 
-  process.stdout.write(prompt);
+  process.stdout.write(cyan(prompt));
   return new Promise((resolve, reject) => {
     waiters.push({ resolve, reject });
     deliverAvailableLines();

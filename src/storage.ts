@@ -1,3 +1,4 @@
+import { red } from "./colors.ts";
 import type { City, State } from "./types.ts";
 
 const DATA_FILE = "data.json";
@@ -15,7 +16,7 @@ export async function loadState(): Promise<State> {
   try {
     return normalizeState(await file.json());
   } catch {
-    console.warn(`  Advertencia: ${DATA_FILE} es inválido. Se usará un estado vacío.`);
+    console.warn(red(`  Advertencia: ${DATA_FILE} es inválido. Se usará un estado vacío.`));
     return structuredClone(DEFAULT_STATE);
   }
 }
