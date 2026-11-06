@@ -84,6 +84,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: "*"
+          merge-multiple: true
 
       - name: Crear y pushear el tag
         if: steps.tag.outputs.exists == 'false'
