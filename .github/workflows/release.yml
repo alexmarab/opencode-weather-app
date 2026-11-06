@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Compilar binario para ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-amd64
+            artifact: weather-linux-amd64
+          - os: macos-latest
+            target: macos-arm64
+            artifact: weather-macos-arm64
+          - os: windows-latest
+            target: windows-amd64
+            artifact: weather-windows-amd64.exe
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Instalar dependencias
+        run: bun install
+
+      - name: Compilar (typecheck + tests + binario)
+        run: bun run build
+
+      - name: Renombrar binario
+        shell: bash
+        run: mv weather* "${{ matrix.artifact }}"
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Crear release tag
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Leer versión de package.json
+        id: version
+        run: |
+          VERSION=$(jq -r '.version // empty' package.json)
+          if [ -z "$VERSION" ]; then
+            echo "::error::El package.json no tiene el campo \"version\". Añádelo (ej. \"version\": \"1.0.0\") y haz push a main para publicar el release."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Comprobar si el tag ya existe
+        id: tag
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if [ -n "$(git tag -l "$TAG")" ]; then
+            echo "El tag $TAG ya existe; no se publica nada nuevo."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Descargar binarios
+        if: steps.tag.outputs.exists == 'false'
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Crear y pushear el tag
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Crear release con los binarios
+        if: steps.tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: gh release create "$TAG" dist/* --generate-notes
